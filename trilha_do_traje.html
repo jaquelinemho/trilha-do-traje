@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Trilha do Traje — Missão Contra o Preconceito Linguístico</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: system-ui, -apple-system, sans-serif; background: #f5f5f0; color: #1a1a1a; min-height: 100vh; }
+
+header { background: #fff; border-bottom: 1px solid #e0e0d8; padding: 1rem 1.5rem; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.5rem; }
+header h1 { font-size: 20px; font-weight: 600; color: #1a1a1a; }
+header p { font-size: 13px; color: #666; }
+
+.insignias-bar { background: #fff; border-bottom: 1px solid #e0e0d8; padding: 0.75rem 1.5rem; display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+.insignias-bar span { font-size: 12px; color: #888; margin-right: 4px; }
+.insignia { padding: 5px 14px; border-radius: 20px; border: 1.5px solid #ddd; font-size: 13px; color: #888; background: #fafafa; transition: all 0.3s; }
+.insignia.earned { background: #e8f8f0; border-color: #2dbe82; color: #0a6e47; font-weight: 600; }
+
+main { max-width: 900px; margin: 0 auto; padding: 1.5rem; }
+
+.controls { display: flex; gap: 12px; align-items: center; justify-content: center; margin-bottom: 1.5rem; flex-wrap: wrap; background: #fff; border-radius: 12px; border: 1px solid #e0e0d8; padding: 1rem 1.5rem; }
+.dado-val { font-size: 36px; min-width: 44px; text-align: center; }
+.dado-btn { padding: 10px 24px; border-radius: 8px; border: 1.5px solid #ddd; background: #fff; cursor: pointer; font-size: 15px; font-weight: 500; color: #1a1a1a; transition: background 0.15s; }
+.dado-btn:hover { background: #f0f0ea; }
+.dado-btn:active { transform: scale(0.97); }
+.score-info { font-size: 14px; color: #666; display: flex; gap: 16px; flex-wrap: wrap; justify-content: center; }
+.score-info strong { color: #1a1a1a; }
+
+.board { display: flex; flex-direction: column; gap: 8px; margin-bottom: 1.5rem; }
+.row { display: flex; gap: 8px; justify-content: center; }
+.casa { width: 80px; height: 80px; border-radius: 10px; border: 1.5px solid #ddd; cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative; transition: transform 0.15s, box-shadow 0.15s; user-select: none; background: #fafafa; }
+.casa:hover { transform: scale(1.06); box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+.casa.current { border: 2.5px solid #2dbe82; box-shadow: 0 0 0 3px rgba(45,190,130,0.2); }
+.casa .num { font-size: 10px; color: #aaa; position: absolute; top: 4px; left: 6px; font-weight: 600; }
+.casa .pino { font-size: 11px; position: absolute; top: 2px; right: 4px; }
+.casa .icon { font-size: 22px; }
+.casa .tipo-label { font-size: 8px; color: #aaa; text-align: center; line-height: 1.2; margin-top: 2px; }
+
+.casa.tipo-azul { background: #ebf3ff; border-color: #90bef0; }
+.casa.tipo-vermelho { background: #fff0ea; border-color: #f0a07b; }
+.casa.tipo-verde { background: #eef7e4; border-color: #9acd59; }
+.casa.tipo-amarelo { background: #fef5e0; border-color: #f0b040; }
+.casa.tipo-roxo { background: #f3f0fe; border-color: #b0a8ec; }
+.casa.tipo-estrela { background: #fffbe0; border-color: #f0c030; }
+.casa.tipo-surpresa { background: #fff0f0; border-color: #f09595; }
+.casa.tipo-portal { background: #f0edfe; border-color: #8077dd; }
+.casa.tipo-final { background: #e0f8ee; border-color: #2dbe82; }
+
+.legenda { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin-bottom: 1.5rem; }
+.leg-item { display: flex; align-items: center; gap: 5px; font-size: 12px; color: #666; background: #fff; border: 1px solid #e0e0d8; padding: 4px 10px; border-radius: 20px; }
+.leg-dot { width: 10px; height: 10px; border-radius: 3px; flex-shrink: 0; }
+
+/* Cartas bônus */
+.cartas-section { background: #fff; border-radius: 12px; border: 1px solid #e0e0d8; padding: 1.25rem 1.5rem; margin-bottom: 1.5rem; }
+.cartas-section h2 { font-size: 15px; font-weight: 600; margin-bottom: 1rem; color: #1a1a1a; }
+.cartas-grid { display: flex; flex-wrap: wrap; gap: 10px; }
+.carta-btn { padding: 8px 16px; border-radius: 8px; border: 1.5px solid #ddd; background: #fafafa; cursor: pointer; font-size: 13px; color: #444; transition: background 0.15s; }
+.carta-btn:hover { background: #f0f0ea; border-color: #aaa; }
+
+/* Modal */
+.modal-bg { position: fixed; inset: 0; background: rgba(0,0,0,0.4); display: flex; align-items: center; justify-content: center; z-index: 200; padding: 1rem; }
+.modal-bg.hidden { display: none; }
+.modal { background: #fff; border-radius: 14px; border: 1px solid #e0e0d8; padding: 1.75rem; max-width: 520px; width: 100%; max-height: 88vh; overflow-y: auto; }
+.modal .casa-meta { font-size: 12px; color: #aaa; margin-bottom: 6px; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; }
+.modal h2 { font-size: 18px; font-weight: 600; margin-bottom: 0.75rem; color: #1a1a1a; }
+.modal .m-texto { font-size: 14px; color: #444; line-height: 1.7; margin-bottom: 1rem; white-space: pre-line; }
+.modal .opcoes { display: flex; flex-direction: column; gap: 8px; margin-bottom: 1rem; }
+.opcao-btn { padding: 10px 14px; border-radius: 8px; border: 1.5px solid #ddd; background: #fafafa; cursor: pointer; font-size: 14px; color: #1a1a1a; text-align: left; transition: background 0.15s; }
+.opcao-btn:hover:not(:disabled) { background: #f0f0ea; }
+.opcao-btn.correto { background: #e8f8f0; border-color: #2dbe82; color: #0a6e47; font-weight: 600; }
+.opcao-btn.errado { background: #fff0f0; border-color: #f09595; color: #7a1515; }
+.opcao-btn:disabled { cursor: default; }
+.resposta-reveal { font-size: 13px; color: #555; background: #f5f5f0; border-radius: 8px; padding: 12px 14px; line-height: 1.7; margin-bottom: 1rem; white-space: pre-line; border-left: 3px solid #2dbe82; }
+.recompensa { font-size: 13px; padding: 8px 12px; background: #fffbe0; border-radius: 8px; color: #6b4f00; margin-bottom: 1rem; border: 1px solid #f0d060; }
+.modal-footer { display: flex; gap: 10px; justify-content: flex-end; }
+.btn-fechar { padding: 9px 20px; border-radius: 8px; border: 1.5px solid #ddd; background: #fafafa; cursor: pointer; font-size: 14px; color: #1a1a1a; }
+.btn-fechar:hover { background: #f0f0ea; }
+.btn-revelar { padding: 9px 20px; border-radius: 8px; border: 1.5px solid #2dbe82; background: #e8f8f0; cursor: pointer; font-size: 14px; color: #0a6e47; font-weight: 600; }
+.btn-revelar:hover { background: #d0f0e0; }
+
+.vitoria { text-align: center; padding: 1rem 0; }
+.vitoria h3 { font-size: 22px; font-weight: 700; color: #0a6e47; margin-bottom: 0.5rem; }
+.vitoria p { font-size: 14px; color: #555; }
+
+footer { text-align: center; padding: 1.5rem; font-size: 12px; color: #aaa; border-top: 1px solid #e0e0d8; margin-top: 1rem; }
+</style>
+</head>
+<body>
+
+<header>
+  <div>
+    <h1>🎲 Trilha do Traje</h1>
+    <p>A Missão Contra o Preconceito Linguístico</p>
+  </div>
+  <div style="font-size:13px;color:#888;">Seminário de Boas Práticas de Mentoria III</div>
+</header>
+
+<div class="insignias-bar">
+  <span>Insígnias:</span>
+  <div class="insignia" id="ins-adequacao">🧭 Adequação</div>
+  <div class="insignia" id="ins-respeito">💬 Respeito</div>
+  <div class="insignia" id="ins-reflexao">🔎 Reflexão</div>
+  <div class="insignia" id="ins-criatividade">🎙️ Criatividade</div>
+</div>
+
+<main>
+
+  <div class="controls">
+    <div class="dado-val" id="dado-display">🎲</div>
+    <button class="dado-btn" onclick="rolarDado()">▶ Rolar dado</button>
+    <div class="score-info">
+      <span>Pontos: <strong id="pontos">0</strong></span>
+      <span>Casa atual: <strong id="pos-display">1</strong> / 30</span>
+      <span>Insígnias: <strong id="ins-count">0</strong> / 4</span>
+    </div>
+  </div>
+
+  <div id="board" class="board"></div>
+
+  <div class="legenda">
+    <div class="leg-item"><div class="leg-dot" style="background:#90bef0"></div>Conceitual</div>
+    <div class="leg-item"><div class="leg-dot" style="background:#f0a07b"></div>Adequação</div>
+    <div class="leg-item"><div class="leg-dot" style="background:#9acd59"></div>Criativo</div>
+    <div class="leg-item"><div class="leg-dot" style="background:#f0b040"></div>Cena</div>
+    <div class="leg-item"><div class="leg-dot" style="background:#b0a8ec"></div>Mito/Verdade</div>
+    <div class="leg-item"><div class="leg-dot" style="background:#f0c030;border:2px solid #c09000"></div>⭐ Estrela</div>
+    <div class="leg-item"><div class="leg-dot" style="background:#f09595"></div>⚠️ Surpresa</div>
+  </div>
+
+  <div class="cartas-section">
+    <h2>🃏 Cartas Bônus</h2>
+    <div class="cartas-grid" id="cartas-grid"></div>
+  </div>
+
+</main>
+
+<div class="modal-bg hidden" id="modal">
+  <div class="modal">
+    <div class="casa-meta" id="m-num"></div>
+    <h2 id="m-titulo"></h2>
+    <div class="m-texto" id="m-texto"></div>
+    <div class="opcoes" id="m-opcoes"></div>
+    <div class="recompensa" id="m-recompensa" style="display:none"></div>
+    <div class="modal-footer">
+      <button class="btn-revelar" id="btn-revelar" onclick="revelarResposta()" style="display:none">Ver resposta</button>
+      <button class="btn-fechar" onclick="fecharModal()">Fechar</button>
+    </div>
+  </div>
+</div>
+
+<footer>Trilha do Traje — Projeto Missão Traje da Língua · Mentoria III</footer>
+
+<script>
+const casas = [
+  { tipo:'portal', icone:'🚪', titulo:'Portal da Missão', texto:'Você entrou na Agência Contra o Preconceito Linguístico!\n\nEscolha um codinome para sua equipe:\n• Esquadrão Vírgula\n• Liga dos Registros\n• Caçadores de Mitos\n• Tropas do Traje\n\n(ou criem o seu próprio!)', criativo:true, recompensa:'+1 insígnia de Criatividade', insignia:'criatividade', pts:0 },
+  { tipo:'azul', icone:'👕', titulo:'O Guarda-Roupa da Língua', texto:'Por que a linguagem pode ser comparada a uma roupa?', resposta:'Porque adaptamos nossa forma de falar e escrever de acordo com a situação, o público e o objetivo da comunicação.', recompensa:'+10 pontos', pts:10 },
+  { tipo:'vermelho', icone:'🧥', titulo:'O Traje Social', texto:'Você vai enviar um currículo para uma vaga de emprego. Qual frase é mais adequada?\n\nA. "Oi, queria trampar aí, me chama!"\nB. "Prezados, encaminho meu currículo para avaliação."\nC. "E aí, pessoal, tudo certo com a vaga?"', opcoes:['A. "Oi, queria trampar aí, me chama!"','B. "Prezados, encaminho meu currículo para avaliação."','C. "E aí, pessoal, tudo certo com a vaga?"'], correta:1, recompensa:'+10 pontos e insígnia de Adequação', pts:10, insignia:'adequacao' },
+  { tipo:'vermelho', icone:'🏠', titulo:'O Traje de Casa', texto:'Você vai mandar mensagem para seu melhor amigo chamando para jogar videogame.\n\nA frase "Bora jogar mais tarde?" pode ser adequada?', opcoes:['Sim, é adequada para esse contexto','Não, sempre devemos escrever formalmente'], correta:0, resposta:'Sim! Em uma conversa informal entre amigos, essa forma é completamente adequada ao contexto comunicativo.', recompensa:'+10 pontos', pts:10 },
+  { tipo:'azul', icone:'🚨', titulo:'Alerta de Preconceito', texto:'Alguém diz:\n\n"Quem fala nós vai é ignorante."\n\nExplique por que essa frase é preconceituosa.', resposta:'Porque julga a inteligência ou o valor de uma pessoa pela forma como ela fala. Existem variedades linguísticas e ninguém deve ser humilhado por sua fala.', recompensa:'+1 insígnia de Respeito', insignia:'respeito', pts:0 },
+  { tipo:'roxo', icone:'🟣', titulo:'Mito em Fuga', texto:'Mito ou verdade?\n\n"Existe apenas uma forma correta de falar português."', opcoes:['Mito','Verdade'], correta:0, resposta:'Mito! A língua possui variedades regionais, sociais, culturais e históricas. A norma-padrão é importante em alguns contextos, mas não é a única forma de usar a língua.', recompensa:'+10 pontos', pts:10 },
+  { tipo:'verde', icone:'🗺️', titulo:'O Sotaque é um Mapa', texto:'Desafio criativo: dê um exemplo de uma palavra ou expressão que muda de uma região para outra do Brasil.', criativo:true, resposta:'Exemplos:\n• Mandioca / aipim / macaxeira\n• Pão francês / cacetinho / pão de sal\n• Menino / guri / piá / moleque', recompensa:'+15 pontos', pts:15 },
+  { tipo:'estrela', icone:'⭐', titulo:'Casa Estrela: Bônus de Respeito', texto:'Você ouviu alguém zombando do sotaque de outra pessoa e interveio com respeito.\n\nRecompensa: avance 2 casas e ganhe a insígnia de Respeito!', especial:'avancar', qtd:2, recompensa:'+1 insígnia de Respeito + avance 2 casas', insignia:'respeito', pts:0 },
+  { tipo:'azul', icone:'📖', titulo:'A Missão de Lya Luft', texto:'No texto "O Traje", Lya Luft critica principalmente:\n\nA. A fala cotidiana das pessoas.\nB. O descuido com a escrita em situações que exigem atenção.\nC. Os sotaques regionais brasileiros.', opcoes:['A. A fala cotidiana das pessoas.','B. O descuido com a escrita em situações formais.','C. Os sotaques regionais brasileiros.'], correta:1, recompensa:'+10 pontos', pts:10 },
+  { tipo:'azul', icone:'✍️', titulo:'Pontuação em Perigo', texto:'Corrija a frase:\n\n"Vamos comer crianças"', resposta:'"Vamos comer, crianças."\n\nA vírgula muda completamente o sentido da frase. Pequena vírgula, grande caos! 🫠', recompensa:'+10 pontos', pts:10 },
+  { tipo:'amarelo', icone:'🧑‍🏫', titulo:'Professor Fora da Sala', texto:'Imagine que você é um professor conversando com colegas no intervalo.\n\nCrie uma frase informal que esse professor poderia usar.', criativo:true, resposta:'Exemplo: "Gente, hoje a turma estava bem animada!"', recompensa:'+15 pontos', pts:15 },
+  { tipo:'amarelo', icone:'📚', titulo:'Professor em Aula', texto:'Agora imagine o mesmo professor explicando um conteúdo para a turma.\n\nCrie uma frase mais formal e clara.', criativo:true, resposta:'Exemplo: "Vamos analisar como a escolha das palavras muda conforme o contexto comunicativo."', recompensa:'+15 pontos e insígnia de Adequação', pts:15, insignia:'adequacao' },
+  { tipo:'azul', icone:'🔎', titulo:'Detetive dos Mitos', texto:'Qual frase demonstra preconceito linguístico?\n\nA. "Em um relatório, é importante revisar a escrita."\nB. "Toda pessoa que fala diferente é menos inteligente."\nC. "A linguagem pode mudar conforme a situação."', opcoes:['A. "Em um relatório, é importante revisar a escrita."','B. "Toda pessoa que fala diferente é menos inteligente."','C. "A linguagem pode mudar conforme a situação."'], correta:1, recompensa:'+10 pontos', pts:10 },
+  { tipo:'verde', icone:'🎤', titulo:'Jornalista em Dupla Vida', texto:'Crie duas falas para um jornalista:\n\n1. Uma frase para uma reportagem.\n2. Uma frase para conversar com amigos.', criativo:true, resposta:'Reportagem: "A prefeitura anunciou novas medidas para o transporte público."\n\nAmigos: "Vocês viram a confusão no trânsito hoje?"', recompensa:'+15 pontos', pts:15 },
+  { tipo:'surpresa', icone:'⚠️', titulo:'Casa Surpresa: Vento de Mudança', texto:'Uma rajada de vento bagunçou seu guarda-roupa linguístico!\n\nExplique em uma frase o que é adequação linguística.\n\n✅ Se acertar: avance 1 casa.\n❌ Se errar: volte 2 casas.', resposta:'Adequação linguística é adaptar a forma de falar ou escrever conforme o contexto, o interlocutor e o objetivo da comunicação.', recompensa:'Acerto: avança 1 | Erro: volta 2', pts:0, surpresa:true },
+  { tipo:'roxo', icone:'🟣', titulo:'Verdade ou Ficção?', texto:'Verdade ou ficção?\n\n"Usar a norma-padrão em um texto formal significa que outras formas de falar são inferiores."', opcoes:['Verdade','Ficção'], correta:1, resposta:'Ficção! A norma-padrão é uma escolha adequada para certos contextos, como documentos e trabalhos acadêmicos. Isso não torna outras variedades menos importantes.', recompensa:'+10 pontos', pts:10 },
+  { tipo:'verde', icone:'🏗️', titulo:'Engenheiro em Missão', texto:'Crie uma frase que um engenheiro poderia usar:\n\nA. Em um relatório técnico.\nB. Conversando com um amigo.', criativo:true, resposta:'Relatório: "A estrutura apresenta desvio de 2% em relação ao eixo vertical."\n\nAmigo: "Cara, essa viga tá torta demais!"', recompensa:'+15 pontos', pts:15 },
+  { tipo:'verde', icone:'💌', titulo:'Correio do Respeito', texto:'Escreva uma frase curta para combater o preconceito linguístico.', criativo:true, resposta:'Exemplos:\n• "Sotaque não é erro, é história."\n• "A língua muda, vive e acompanha as pessoas."\n• "Corrigir não é humilhar."\n• "Toda voz merece respeito."', recompensa:'+15 pontos e insígnia de Respeito', pts:15, insignia:'respeito' },
+  { tipo:'vermelho', icone:'📱', titulo:'O Caso do WhatsApp', texto:'Uma pessoa escreve no grupo da família:\n\n"gente chego ai 7h ta"\n\nEssa mensagem é inadequada em todos os contextos?', opcoes:['Sim, sempre inadequada','Não, pode funcionar em contexto informal'], correta:1, recompensa:'+10 pontos', pts:10 },
+  { tipo:'amarelo', icone:'🛍️', titulo:'Vendedor Campeão', texto:'Você é vendedor(a) em uma loja.\n\nCrie uma fala educada para atender um cliente.', criativo:true, resposta:'Exemplo: "Bom dia! Posso ajudar você a encontrar algum produto?"', recompensa:'+15 pontos', pts:15 },
+  { tipo:'azul', icone:'👹', titulo:'O Monstro do "Errado"', texto:'Complete a frase:\n\n"Nem toda diferença linguística é um ________. Muitas vezes, ela é uma ________."\n\nEscolha a opção correta:\n\nA. erro / variação\nB. problema / falta de educação\nC. defeito / evolução', opcoes:['A. erro / variação','B. problema / falta de educação','C. defeito / evolução'], correta:0, recompensa:'+10 pontos e insígnia de Reflexão', pts:10, insignia:'reflexao' },
+  { tipo:'vermelho', icone:'🏫', titulo:'Mensagem para a Direção', texto:'Você precisa enviar um e-mail para a direção da escola pedindo uma reunião. Escolha a melhor abertura:\n\nA. "Oi, preciso falar com vocês urgente."\nB. "Prezada equipe diretiva, gostaria de solicitar uma reunião para tratar de um assunto acadêmico."\nC. "E aí, quando dá pra conversar?"', opcoes:['A. "Oi, preciso falar com vocês urgente."','B. "Prezada equipe diretiva, gostaria de solicitar uma reunião..."','C. "E aí, quando dá pra conversar?"'], correta:1, recompensa:'+10 pontos', pts:10 },
+  { tipo:'estrela', icone:'🎙️', titulo:'Casa Estrela: Podcast no Ar', texto:'Seu grupo criou um episódio do podcast "Traje sob Medida"!\n\nEscolha um formato para o podcast:\n• Entrevista fictícia\n• Mesa redonda\n• Análise de caso\n• Carta-consulta\n• Leitura comentada\n\nApresente brevemente como seria o episódio!', criativo:true, recompensa:'+20 pontos e insígnia de Criatividade', pts:20, insignia:'criatividade' },
+  { tipo:'amarelo', icone:'⚖️', titulo:'Julgamento do Sotaque', texto:'Alguém diz: "Esse sotaque é feio."\n\nResponda de forma respeitosa, mas firme.', criativo:true, resposta:'"Não existe sotaque feio. Cada sotaque faz parte da história e da identidade das pessoas."', recompensa:'+15 pontos', pts:15 },
+  { tipo:'azul', icone:'🛟', titulo:'A Vírgula Salvadora', texto:'Qual frase está melhor pontuada?\n\nA. "Se você estudar passará."\nB. "Se você estudar, passará."\nC. "Se, você estudar passará."', opcoes:['A. "Se você estudar passará."','B. "Se você estudar, passará."','C. "Se, você estudar passará."'], correta:1, recompensa:'+10 pontos', pts:10 },
+  { tipo:'verde', icone:'🤝', titulo:'Missão: Reescreva Sem Humilhar', texto:'Transforme esta frase preconceituosa em uma orientação respeitosa:\n\n"Você fala tudo errado."', criativo:true, resposta:'Exemplo: "Em uma apresentação formal, podemos organizar essa fala de outra maneira para deixá-la mais clara."', recompensa:'+15 pontos e insígnia de Respeito', pts:15, insignia:'respeito' },
+  { tipo:'azul', icone:'📗', titulo:'Bagno Detecta um Mito', texto:'Por que dizer que "quem não usa a gramática normativa não sabe pensar" é um mito?', resposta:'Porque a capacidade de pensar, criar, trabalhar e se comunicar não depende de usar sempre a norma-padrão. As pessoas usam diferentes variedades linguísticas conforme seus contextos.', recompensa:'+10 pontos e insígnia de Reflexão', pts:10, insignia:'reflexao' },
+  { tipo:'amarelo', icone:'👗', titulo:'Desfile dos Trajes', texto:'Classifique cada situação em Traje Social, Traje Esporte ou Traje de Casa:\n\n1. Trabalho acadêmico\n2. Conversa com amigo\n3. Pedido formal por e-mail\n4. Comentário em um jogo online', resposta:'1. Traje Social\n2. Traje de Casa\n3. Traje Social\n4. Traje de Casa ou Esporte, dependendo do contexto.', recompensa:'+15 pontos', pts:15 },
+  { tipo:'azul', icone:'🗝️', titulo:'Chave da Convivência', texto:'Desafio final antes da chegada!\n\nComplete:\n\n"Cuidar da escrita é importante, mas respeitar a forma de falar das pessoas é ________."\n\nEscolha a melhor palavra:',opcoes:['essencial','opcional','secundário'], correta:0, recompensa:'+20 pontos', pts:20 },
+  { tipo:'final', icone:'🌟', titulo:'Chegada: Agente da Língua!', texto:'Você concluiu a Trilha do Traje!\n\nA língua não é uma prisão com uma única chave. Ela é viva, diversa e cheia de possibilidades. Em alguns momentos usamos traje social; em outros, traje de casa. O importante é saber escolher o registro adequado sem transformar diferença em motivo de julgamento.\n\n🎯 Desafio de encerramento:\n"O que você leva desta trilha para sua forma de falar, escrever e ouvir os outros?"', criativo:true, recompensa:'Missão concluída! 🎉', pts:0 }
+];
+
+const cartasBonus = [
+  { icone:'🎙️', titulo:'Microfone Aberto', texto:'Conte uma situação em que você já ouviu alguém ser julgado pela forma de falar.', recompensa:'+10 pontos', pts:10 },
+  { icone:'🔄', titulo:'Tradutor de Contextos', texto:'Transforme a frase "Me manda isso aí" em uma versão adequada para um e-mail formal.', resposta:'Possível resposta: "Poderia, por gentileza, encaminhar o documento solicitado?"', recompensa:'+10 pontos', pts:10 },
+  { icone:'🛡️', titulo:'Escudo Contra o Preconceito', texto:'Crie uma resposta para defender alguém que foi ridicularizado por causa do sotaque.', criativo:true, recompensa:'+15 pontos', pts:15 },
+  { icone:'📡', titulo:'Radar da Escrita', texto:'Encontre e corrija o problema na frase:\n\n"Agente vamos começar a missão."', resposta:'"Agente, vamos começar a missão." — A vírgula separa o vocativo do restante da frase.', recompensa:'+10 pontos', pts:10 },
+  { icone:'🧳', titulo:'Passaporte Regional', texto:'Cite uma expressão típica da sua região ou de outra região brasileira e explique o que ela significa.', criativo:true, recompensa:'+15 pontos', pts:15 }
+];
+
+let pos = 0;
+let pontos = 0;
+let insignias = { adequacao:false, respeito:false, reflexao:false, criatividade:false };
+let respostaRevelada = false;
+let modalData = null;
+let pinoEmoji = '🔵';
+
+function tipoClass(c) {
+  return 'tipo-' + c.tipo;
+}
+
+function buildBoard() {
+  const board = document.getElementById('board');
+  const allEls = casas.map((c, i) => {
+    const d = document.createElement('div');
+    d.className = 'casa ' + tipoClass(c);
+    if (i === 0) d.classList.add('current');
+    d.id = 'casa-' + i;
+    d.onclick = () => abrirCasa(i);
+    d.title = 'Casa ' + (i+1) + ': ' + c.titulo;
+    d.innerHTML = `<span class="num">${i+1}</span><span class="pino" id="pino-${i}" style="display:${i===0?'block':'none'}">${pinoEmoji}</span><span class="icon">${c.icone}</span>`;
+    return d;
+  });
+
+  for (let r = 0; r < 6; r++) {
+    const row = document.createElement('div');
+    row.className = 'row';
+    let slice = allEls.slice(r*5, r*5+5);
+    if (r % 2 === 1) slice = [...slice].reverse();
+    slice.forEach(el => row.appendChild(el));
+    board.appendChild(row);
+  }
+
+  const cartasGrid = document.getElementById('cartas-grid');
+  cartasBonus.forEach((carta, i) => {
+    const b = document.createElement('button');
+    b.className = 'carta-btn';
+    b.textContent = carta.icone + ' ' + carta.titulo;
+    b.onclick = () => abrirCarta(i);
+    cartasGrid.appendChild(b);
+  });
+}
+
+function updateBoard() {
+  casas.forEach((c, i) => {
+    const el = document.getElementById('casa-' + i);
+    if (!el) return;
+    if (i === pos) el.classList.add('current');
+    else el.classList.remove('current');
+    const pino = document.getElementById('pino-' + i);
+    if (pino) pino.style.display = i === pos ? 'block' : 'none';
+  });
+  document.getElementById('pos-display').textContent = pos + 1;
+  document.getElementById('pontos').textContent = pontos;
+  const count = Object.values(insignias).filter(Boolean).length;
+  document.getElementById('ins-count').textContent = count;
+  ['adequacao','respeito','reflexao','criatividade'].forEach(k => {
+    const el = document.getElementById('ins-' + k);
+    if (insignias[k]) el.classList.add('earned');
+    else el.classList.remove('earned');
+  });
+}
+
+function rolarDado() {
+  const val = Math.floor(Math.random() * 6) + 1;
+  const faces = ['⚀','⚁','⚂','⚃','⚄','⚅'];
+  document.getElementById('dado-display').textContent = faces[val-1];
+  const novo = Math.min(pos + val, 29);
+  pos = novo;
+  updateBoard();
+  document.getElementById('casa-' + pos).scrollIntoView({ behavior:'smooth', block:'center' });
+  setTimeout(() => abrirCasa(pos), 500);
+}
+
+function abrirCasa(i) {
+  const c = casas[i];
+  modalData = { ...c, isCarta:false };
+  respostaRevelada = false;
+
+  const tipos = { portal:'🚪 Portal', azul:'🔵 Conceitual', vermelho:'🔴 Adequação', verde:'🟢 Criativo', amarelo:'🟡 Cena', roxo:'🟣 Mito/Verdade', estrela:'⭐ Estrela', surpresa:'⚠️ Surpresa', final:'🌟 Final' };
+  document.getElementById('m-num').textContent = 'Casa ' + (i+1) + ' · ' + (tipos[c.tipo] || c.tipo);
+  document.getElementById('m-titulo').textContent = c.titulo;
+  document.getElementById('m-texto').textContent = c.texto;
+
+  const recomp = document.getElementById('m-recompensa');
+  recomp.style.display = c.recompensa ? 'block' : 'none';
+  recomp.textContent = c.recompensa ? '🏆 ' + c.recompensa : '';
+
+  const opcDiv = document.getElementById('m-opcoes');
+  opcDiv.innerHTML = '';
+  const revelarBtn = document.getElementById('btn-revelar');
+
+  if (c.especial === 'avancar') {
+    pos = Math.min(pos + c.qtd, 29);
+    if (c.insignia) insignias[c.insignia] = true;
+    updateBoard();
+    revelarBtn.style.display = 'none';
+  } else if (c.opcoes) {
+    c.opcoes.forEach((op, oi) => {
+      const b = document.createElement('button');
+      b.className = 'opcao-btn';
+      b.textContent = op;
+      b.onclick = () => checarOpcao(c, oi, opcDiv);
+      opcDiv.appendChild(b);
+    });
+    revelarBtn.style.display = 'none';
+  } else if (c.resposta) {
+    revelarBtn.style.display = 'inline-block';
+    revelarBtn.textContent = 'Ver resposta';
+  } else {
+    revelarBtn.style.display = c.criativo ? 'none' : 'none';
+    if (c.criativo) {
+      if (c.pts && c.pts > 0) pontos += c.pts;
+      if (c.insignia) insignias[c.insignia] = true;
+      updateBoard();
+    }
+  }
+
+  if (i === 29) {
+    const v = document.createElement('div');
+    v.className = 'vitoria';
+    v.innerHTML = '<h3>🎉 Parabéns, Agente!</h3><p>Missão concluída com sucesso!</p>';
+    opcDiv.appendChild(v);
+  }
+
+  document.getElementById('modal').classList.remove('hidden');
+}
+
+function abrirCarta(i) {
+  const c = cartasBonus[i];
+  modalData = { ...c, isCarta:true };
+  respostaRevelada = false;
+  document.getElementById('m-num').textContent = '🃏 Carta Bônus';
+  document.getElementById('m-titulo').textContent = c.icone + ' ' + c.titulo;
+  document.getElementById('m-texto').textContent = c.texto;
+  const recomp = document.getElementById('m-recompensa');
+  recomp.style.display = 'block';
+  recomp.textContent = '🏆 ' + c.recompensa;
+  document.getElementById('m-opcoes').innerHTML = '';
+  const revelarBtn = document.getElementById('btn-revelar');
+  revelarBtn.style.display = c.resposta ? 'inline-block' : 'none';
+  revelarBtn.textContent = 'Ver resposta';
+  document.getElementById('modal').classList.remove('hidden');
+}
+
+function checarOpcao(c, oi, opcDiv) {
+  const btns = opcDiv.querySelectorAll('.opcao-btn');
+  btns.forEach((b, bi) => {
+    b.disabled = true;
+    b.classList.remove('correto','errado');
+    if (bi === c.correta) b.classList.add('correto');
+    else if (bi === oi && oi !== c.correta) b.classList.add('errado');
+  });
+  if (oi === c.correta) {
+    if (c.pts) pontos += c.pts;
+    if (c.insignia) insignias[c.insignia] = true;
+  } else {
+    if (pos > 0) pos--;
+  }
+  updateBoard();
+}
+
+function revelarResposta() {
+  const c = modalData;
+  if (!c || !c.resposta) return;
+  const opcDiv = document.getElementById('m-opcoes');
+  if (opcDiv.querySelector('.resposta-reveal')) return;
+  const d = document.createElement('div');
+  d.className = 'resposta-reveal';
+  d.textContent = c.resposta;
+  opcDiv.appendChild(d);
+  if (!respostaRevelada) {
+    if (c.pts && c.pts > 0) pontos += c.pts;
+    if (c.insignia) insignias[c.insignia] = true;
+    respostaRevelada = true;
+    updateBoard();
+  }
+}
+
+function fecharModal() {
+  document.getElementById('modal').classList.add('hidden');
+}
+
+document.getElementById('modal').addEventListener('click', function(e) {
+  if (e.target === this) fecharModal();
+});
+
+buildBoard();
+updateBoard();
+</script>
+</body>
+</html>
